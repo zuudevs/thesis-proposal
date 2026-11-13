@@ -11,7 +11,7 @@
 	#text(size: 14pt)[
 		#upper[\ *#metadata.document.kind* \ ]
 		#image(
-			"../../../assets/images/itpln_logo.png",
+			"../assets/images/itpln_logo.png",
 			height: 4.5cm,
 			width: 6.5cm,
 			fit: "contain",

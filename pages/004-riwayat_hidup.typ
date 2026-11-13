@@ -1,4 +1,4 @@
-#import "../../utils/strfmt.typ": strfmt
+#import "../utils/strfmt.typ": strfmt
 
 #let metadata = json("../metadata.json")
 
@@ -39,7 +39,7 @@
 			clip: true,
 			inset: (left: 4pt),
 			image(
-				"../../../assets/images/me.png",
+				"../assets/images/me.png",
 				height: auto,
 				width: 4cm,
 				scaling: "smooth",

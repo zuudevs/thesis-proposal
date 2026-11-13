@@ -1,0 +1,14 @@
+%% Mekanisme high-level Parser JSON On-Demand ze_json (Bab III.2).
+%% Dua tahap terpisah tegas: pemindaian struktural satu lintasan, lalu akses on-demand.
+flowchart LR
+    P["Payload JSON<br/>berkode UTF-8"]
+    subgraph T1["Tahap 1: pemindaian struktural (satu lintasan)"]
+        S["Scanner SWAR<br/>(scanner8 / scanner32 / scanner64)"] --> V["Validasi struktur<br/>dan karakter"] --> T["Tape: posisi<br/>struktur dokumen"]
+    end
+    subgraph T2["Tahap 2: akses on-demand"]
+        K["Kueri aplikasi:<br/>find_field / find_path"] --> C["Session:<br/>kursor maju tunggal"] --> GT["Getter bertipe:<br/>get_int, get_double,<br/>get_string, get_bool"]
+    end
+    P --> S
+    T --> C
+    GT --> O["Nilai yang diminta<br/>(string tanpa salinan)"]
+    T2 -. "arena allocator: seluruh memori kerja<br/>dibebaskan sekaligus di akhir siklus" .-> O

@@ -1,0 +1,8 @@
+%% Arsitektur integrasi ze_json ke aplikasi SAQ (Bab III.3).
+%% Jalur pemanggilan dari lapisan repository hingga nilai kembali.
+flowchart LR
+    R["Lapisan repository<br/>aplikasi pelaporan SAQ<br/>(Node.js)"] -->|"payload dan kueri"| J["Binding JavaScript<br/>(ze_json.mjs)"]
+    J -->|"panggilan C-ABI"| S["Scanner SWAR<br/>(varian dipilih dari binding)"]
+    S -->|"satu lintasan"| M["Memori linear Wasm:<br/>tape posisi struktur"]
+    J -->|"find_path dan getter"| O["Akses on-demand<br/>di atas tape"]
+    O -->|"nilai diminta,<br/>string tanpa salinan"| R

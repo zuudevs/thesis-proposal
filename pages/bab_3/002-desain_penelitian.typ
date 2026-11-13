@@ -75,7 +75,7 @@ Session dikelola arena allocator sehingga dapat dikosongkan sekaligus setelah si
 pembacaan selesai.
 
 #figure(
-  image("../../../../assets/images/mekanisme-ze-json.png", width: 56%),
+  image("../../assets/images/mekanisme-ze-json.png", width: 56%),
   caption: [Mekanisme high-level Parser JSON On-Demand ze_json],
 ) <fig-mekanisme-ze-json>
 
@@ -99,7 +99,7 @@ diperbaiki melalui kalibrasi, penyesuaian warm-up, dan penguatan pencatatan meta
 lingkungan, kemudian pengukuran diulang.
 
 #figure(
-  image("../../../../assets/images/alur-penelitian.png", width: 72%),
+  image("../../assets/images/alur-penelitian.png", width: 72%),
   caption: [Bagan alir penelitian],
 ) <fig-alur-penelitian>
 
@@ -116,7 +116,7 @@ mendapatkan selisih latensi, throughput, dan memori, yang selanjutnya ditafsirka
 sebagai pertukaran beban antara memori dan prosesor.
 
 #figure(
-  image("../../../../assets/images/desain-baseline-vs-treatment.png", width: 100%),
+  image("../../assets/images/desain-baseline-vs-treatment.png", width: 100%),
   caption: [Desain perbandingan baseline dan perlakuan ze_json],
 ) <fig-desain-baseline-vs-treatment>
 

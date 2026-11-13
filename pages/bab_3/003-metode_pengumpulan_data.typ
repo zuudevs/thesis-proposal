@@ -40,7 +40,7 @@ menggunakan satuan yang sama, yaitu nanosecond dan ns/op, sehingga hasilnya dapa
 dibandingkan secara langsung dengan baseline pada mode yang sama.
 
 #figure(
-  image("../../../../assets/images/integrasi-ze-json-saq.png", width: 56%),
+  image("../../assets/images/integrasi-ze-json-saq.png", width: 56%),
   caption: [Arsitektur integrasi ze_json ke aplikasi SAQ],
 ) <fig-integrasi-ze-json-saq>
 
@@ -74,7 +74,7 @@ perangkat pengembang dan server tidak digunakan sebagai dasar perbandingan karen
 akan menimbulkan derau (noise) dan bias lingkungan; setiap peningkatan atau
 penurunan kinerja harus murni dapat diatribusikan kepada ze_json. Untuk menegakkan
 syarat tersebut, perbandingan hanya sah apabila: (1) hash SHA-256 setiap fixture
-identik antara kedua run; (2) versi runtime Node.js major.miner identik dan flag
+identik antara kedua run; (2) versi runtime Node.js major.minor identik dan flag
 runtime terdokumentasi; (3) setiap run diberi device-label yang jelas agar hasil
 dari perangkat berbeda tidak pernah tercampur; (4) kondisi eksekusi sama, meliputi
 urutan mode, durasi warm-up, parameter benchmark, dan keadaan server yang tenang

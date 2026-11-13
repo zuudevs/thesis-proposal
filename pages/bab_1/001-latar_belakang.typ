@@ -5,94 +5,93 @@ serta melayani pencatatan data asisten, dosen, mata kuliah, jadwal, laporan hari
 rekapitulasi, hingga pengiriman pengingat melalui WhatsApp. Hampir seluruh perpindahan
 data pada aplikasi ini berlangsung dalam format JavaScript Object Notation (JSON):
 dokumen pada MongoDB diserialisasi sebagai JSON, konfigurasi aplikasi tersimpan sebagai
-berkas JSON, dan payload antara klien dengan server juga berbentuk JSON. Popularitas
-format ini tidak terlepas dari sifatnya yang ringan, berbasis teks, dan independen
-terhadap bahasa pemrograman @10.17487_RFC8259.
+berkas JSON, dan payload antara klien dengan server juga berbentuk JSON. Karakter format
+ini yang ringan, berbasis teks, dan independen terhadap bahasa pemrograman
+@10.17487_RFC8259 menjadikannya pilihan alami bagi aplikasi berbasis layanan, tetapi
+karakter yang sama juga berarti setiap operasi data menanggung biaya pemrosesan teks.
 
-Di balik popularitasnya, pemrosesan JSON merupakan salah satu titik sempit (bottleneck)
-kinerja yang paling umum pada aplikasi data-intensif. Sebagian besar pustaka parser JSON
-mengadopsi strategi konvensional berbasis Document Object Model (DOM), yaitu mengonversi
-seluruh teks masukan menjadi pohon data yang utama di memori sebelum aplikasi dapat
-membaca nilainya @10.48550_arXiv.1902.08318. Pembentukan pohon penuh ini mahal: biaya
-waktu dan memori dibayar untuk seluruh struktur dokumen, termasuk bagian yang tidak akan
-pernah dibaca oleh aplikasi. Rangkaian penelitian menunjukkan bahwa menghilangkan pohon
-parse dari jalur pemrosesan dapat menekan konsumsi memori hingga 95% pada beban kerja
-analitik @10.1145_3297858.3304008, dan bahwa strategi malas (lazy) secara konsisten
-mengurangi biaya pemrosesan dokumen berpohon @10.1145_585058.585075. Keberlanjutan
-isu ini tampak pada arah penelitian mutakhir yang memindahkan validasi dan pembacaan
-JSON ke skema mengalir (streaming) tanpa memuat dokumen utuh ke memori
-@10.14778_3778092.3778109.
+Setiap pembacaan nilai JSON pada aplikasi tidak menemui data berstruktur, melainkan
+teks yang harus diurai. Strategi yang lazim dipakai pustaka parser mengonversi seluruh
+teks masukan menjadi pohon objek utuh berbasis Document Object Model (DOM) sebelum
+aplikasi dapat membaca nilainya @10.48550_arXiv.1902.08318. Model eksekusi tersebut
+menempatkan biaya pada saat yang salah: validasi, alokasi memori, dan pembentukan objek
+dibayarkan untuk seluruh isi dokumen, termasuk bagian yang tidak akan pernah dibaca
+oleh aplikasi. Pada beban kerja yang hanya memerlukan sebagian kecil isi dokumen,
+strategi tanpa pohon parse terbukti menekan konsumsi memori secara drastis
+@10.1145_3297858.3304008, sementara beragam upaya menangguhkan pekerjaan hingga nilai
+benar-benar dibutuhkan, mulai dari indeks yang dibangun malas sampai filter yang
+didorong masuk ke tahap parsing, bermuara pada kesimpulan yang sama bahwa membayar
+biaya untuk seluruh dokumen sering kali tidak perlu
+@10.14778_3115404.3115416 @10.14778_3236187.3236207 @10.1145_3503222.3507719.
 
-Kondisi serupa dijumpai pada aplikasi pelaporan SAQ. Jalur pembacaan data pada lapisan
-repository memanggil JSON.parse bawaan runtime terhadap seluruh isi berkas atau dokumen
-setiap kali data diakses, sedangkan jalur penyimpanan memori (deep clone) bahkan
-melakukan serialisasi dan parsing ulang secara berpasangan. Padahal pola akses aplikasi
-tergolong parsial: sebagian besar operasi hanya membutuhkan sebagian kecil kolom dari
-suatu dokumen, misalnya daftar nama asisten untuk penyusunan jadwal, atau satu field
-konfigurasi untuk pengingat harian. Biaya pembentukan DOM utuh untuk kebutuhan akses
-parsial tersebut menimbulkan pemborosan dua arah, yaitu waktu prosesor untuk parsing
-yang tidak perlu dan tekanan pengumpul sampah (garbage collector) atas objek sementara
-yang cepat terbuang. Pada sisi aplikasi lab yang berjalan terus-menerus sebagai layanan,
-pemborosan ini bermuara pada konsumsi memori yang meningkat dan waktu respons yang
-tidak stabil.
+Kebutuhan mengendalikan biaya tersebut melahirkan satu kontinum strategi parsing yang
+pergeserannya dapat dibaca dari apa yang ditangguhkan dan apa yang disimpan. Pada ujung
+pertama, parser DOM membayar seluruh biaya di awal lalu menyimpan pohon utuh, sehingga
+akses berikutnya murah tetapi memori tumbuh sebesar dokumen. Pada ujung lainnya,
+pemrosesan mengalir (streaming) memvalidasi sambil lewat lalu membuang struktur, sehingga
+memori tetap kecil tetapi akses terbatas pada urutan masuk
+@10.14778_3778092.3778109. Di antara keduanya, strategi on-demand menawarkan titik
+tengah: antarmuka yang tampak seperti parser DOM bagi pemrogram, tetapi internalnya
+hanya menggerakkan penunjuk melalui teks masukan dan mematerialisasi nilai secara
+malas saat diminta @10.1002_spe.3313. Bagi aplikasi yang membaca nilai secara selektif
+dan acak, bukan aliran berurutan, titik tengah ini menempatkan biaya parsing persis
+pada bagian yang dibaca.
 
-Pendekatan parsing on-demand menawarkan alternatif yang relevan dengan masalah tersebut.
-Antarmuka on-demand hadir bagi pemrogram seperti parser berbasis DOM biasa, tetapi
-implementasinya hanya menggerakkan penunjuk melalui teks masukan dan melakukan
-materialisasi nilai secara malas, yaitu hanya saat nilai benar-benar diminta
-@10.1002_spe.3313. Kecepatan pendekatan ini ditopang teknik SWAR (SIMD Within A
-Register) dan instruksi SIMD yang memindai struktur dokumen secara bit-paralel dalam
-satu lintasan @10.48550_arXiv.1902.08318. Keluarga teknik yang sama terbukti efektif
-pada berbagai konteks pemrosesan JSON, mulai dari pemilihan (projection) dan filter
-yang didorong masuk ke parser @10.14778_3115404.3115416, pemfilteran data mentah
-sebelum parsing @10.14778_3236187.3236207, pemajuan cepat (fast-forward) atas
-substruktur yang tidak relevan terhadap kueri @10.1145_3503222.3507719, hingga
-pembangunan indeks struktural @10.14778_3436905.3436926. Pendekatan on-demand juga
-sudah diadopsi oleh sistem produksi seperti Node.js, Apache Doris, Milvus, dan Velox
-@10.1002_spe.3313.
+Layak atau tidaknya strategi tanpa pohon tersebut pada aplikasi nyata sangat
+ditentukan oleh fondasi mekanisnya, karena kursor yang bergerak per karakter hanya
+menggantikan satu biaya besar dengan biaya kecil yang berulang. Pemindaian struktural
+bit-paralel menutup kelemahan itu: dengan teknik SWAR (SIMD Within A Register) dan
+instruksi SIMD, posisi tanda kutip, kurung, dan pemisah dokumen direkam dalam satu
+lintasan @10.48550_arXiv.1902.08318, sehingga navigasi on-demand dapat melompat langsung
+ke posisi nilai alih-alih mengulang pemindaian teks. Kematangan teknik ini ditandai
+oleh diadopsinya antarmuka on-demand pada sistem produksi seperti Node.js, Apache
+Doris, Milvus, dan Velox @10.1002_spe.3313.
 
-Untuk menghadirkan implementasi parser berkinerja tinggi ke dalam aplikasi Node.js,
-diperlukan jembatan eksekusi lintas bahasa. WebAssembly (Wasm) menyediakan format
-biner ringkas dengan lingkungan eksekusi terpasir (sandboxed) yang dapat dipanggil
-langsung dari JavaScript @10.1145_3714465. Studi empiris menunjukkan bahwa Wasm
-secara umum berkinerja lebih cepat daripada JavaScript dan mendekati kinerja kode
-native pada banyak kasus @10.1109_CLEI53233.2021.9640153 @10.1109_IcETRAN62308.2024.10645198,
-termasuk pada beban kerja komputasi di sisi server @10.1145_3572848.3577436. Ekosistem
-Node.js sendiri telah memuat ratusan paket yang mengintegrasikan modul Wasm ke dalam
-aplikasi produksi @10.1145_3744916.3764533, sehingga pola integrasi parser Wasm pada
-aplikasi server berbasis JavaScript tergolong matang dan teruji.
+Menghadirkan implementasi parser berkinerja tinggi, yang lazim ditulis dalam C++,
+ke dalam aplikasi Node.js membutuhkan jembatan eksekusi lintas bahasa. WebAssembly
+(Wasm) menyediakan format biner portabel dengan lingkungan eksekusi terpasir
+(sandboxed) yang dapat dipanggil langsung dari JavaScript @10.1145_3714465. Bukti
+lintas lingkungan menunjukkan kinerja Wasm umumnya lebih cepat daripada JavaScript
+dan mendekati kode native pada beban komputasi, termasuk di sisi server
+@10.1109_CLEI53233.2021.9640153 @10.1109_IcETRAN62308.2024.10645198
+@10.1145_3572848.3577436, dan ekosistem Node.js telah memuat ratusan paket produksi
+yang mengintegrasikan modul Wasm @10.1145_3744916.3764533. Dengan demikian, pola
+integrasi parser berbasis Wasm pada aplikasi server JavaScript tergolong mapan dan
+teruji.
 
-Meskipun demikian, adopsi parser on-demand bukan keputusan tanpa risiko. Secara
-arsitektural, penghilangan DOM akan meringankan beban memori, tetapi beban komputasi
-parsing yang semula terjadi satu kali lalu dihindari kini berpindah ke prosesor setiap
-kali data diakses. Interaksi antara modul Wasm dan JavaScript juga menimbulkan biaya
-persilangan memori (bridge crossing) yang perlu diperhitungkan @10.31649_vitce_2.2026.121,
-sementara variasi kinerja antar runtime dan antar lingkungan eksekusi dapat menutupi
-atau melebarkan keunggulan yang dilaporkan literatur @10.1145_3487552.3487827
-@10.1109_ASE56229.2023.00088. Dengan kata lain, angka percepatan pada korpus benchmark
-generik belum tentu terulang pada aplikasi nyata yang memiliki pola akses, ukuran
-payload, dan lingkungan penerapan yang berbeda.
+Di sisi lain, pertimbangan rekayasa menuntut agar keputusan adopsi tidak diambil dari
+angka korpus generik semata. Penghilangan pohon menghadirkan perpindahan beban: biaya
+parsing yang semula sekali dibayar kini berpindah ke prosesor setiap kali data diakses,
+ditambah biaya tetap persilangan memori antar batas Wasm dan JavaScript
+@10.31649_vitce_2.2026.121. Kinerja Wasm berbanding JavaScript juga terbukti sangat
+bergantung pada lingkungan eksekusi @10.1145_3487552.3487827 @10.1109_ASE56229.2023.00088,
+dan literatur pengukuran menegaskan bahwa perbandingan kinerja lintas lingkungan tanpa
+dokumentasi kondisi eksekusi mudah menyesatkan @10.1145_2807591.2807644. Konsekuensinya,
+pertanyaan kelayakan hanya dapat dijawab dengan pengukuran yang menahan seluruh
+variabel selain parser tetap konstan: perangkat keras yang sama, runtime yang sama,
+dan kondisi beban server yang tercatat.
 
-Di sinilah celah penelitian (research gap) penelitian ini berada. Rangkaian karya
-terdahulu menguji parser on-demand dan SWAR terutama pada korpus benchmark sintetis
-atau beban kerja analitik skala besar @10.48550_arXiv.1902.08318 @10.1145_3503222.3507719,
-sedangkan bukti penerapannya pada aplikasi pelaporan operasional dengan pola akses
-parsial dan payload menengah masih terbatas. Penelitian ini berangkat dari premis bahwa
-metode yang terbukti berhasil pada sebuah paper akan tetap menyelesaikan masalah pada
-studi kasus apabila kondisi eksekusinya dikendalikan dengan benar; premis tersebut
-dinyatakan secara eksplisit sebagai hipotesis dan diuji secara empiris. Studi kasus
-yang dipilih adalah aplikasi pelaporan otomatis SAQ, dengan teknik baru yang diadopsi
-berupa Parser JSON On-Demand ze_json: _parser JSON_ on-demand satu lintasan berbasis
-C++23 dengan pemindaian struktural SWAR yang dikompilasi ke WebAssembly 64-bit dan
-diekspos ke runtime Node.js melalui antarmuka binding JavaScript.
+Menempatkan seluruh pertimbangan di atas menghadirkan peta ruang bukti yang jelas.
+Bukti kuantitatif atas strategi on-demand, pemindaian bit-paralel, dan integrasi Wasm
+telah terkumpul rapat pada korpus benchmark sintetis dan beban kerja analitik skala
+besar @10.48550_arXiv.1902.08318 @10.1145_3503222.3507719 @10.1002_spe.3313. Titik pada
+peta itu yang belum tertutup adalah aplikasi operasional nyata: pola aksesnya parsial,
+ukuran payloadnya menengah, dan layanannya berjalan terus-menerus, sehingga pertukaran
+beban antara memori dan prosesornya tidak otomatis dapat disimpulkan dari pengukuran
+korpus generik. Aplikasi pelaporan SAQ berada persis pada titik tersebut, dan jalur
+pemrosesan JSON-nya saat ini masih membayar strategi DOM utuh melalui JSON.parse
+bawaan runtime pada setiap pembacaan berkas, serta melalui pasangan serialisasi-parsing
+pada penggandaan data di lapisan penyimpanan.
 
-Melalui studi kasus tersebut, penelitian ini mengevaluasi kualitas kinerja dengan
-membandingkan baseline aplikasi SAQ saat ini (sebelum menggunakan ze_json) dengan hasil
-setelah implementasi, pada lingkungan perangkat keras yang identik dan tertutup.
-Pengukuran dilakukan dalam satuan nanosecond dan nanosecond per operasi (ns/op) atas
-pemanggilan fungsi parser, disertai pencatatan beban prosesor harian sebelum
-implementasi agar dampak teknis yang teramati dapat dikaitkan secara langsung dengan
-perubahan parser, bukan dengan variasi lingkungan. Dengan demikian, penelitian ini
-diharapkan memberikan dua kontribusi sekaligus: bukti empiris kelayakan parser
-on-demand pada aplikasi pelaporan nyata, dan metodologi evaluasi yang tertib dalam
-menghindari bias lingkungan.
+Penelitian ini mengambil tempat pada titik yang kosong tersebut dengan mengevaluasi
+Parser JSON On-Demand ze_json pada studi kasus aplikasi pelaporan SAQ. ze_json adalah
+parser JSON on-demand satu lintasan berbasis C++23 dengan pemindaian struktural SWAR
+yang dikompilasi ke WebAssembly 64-bit dan diekspos ke runtime Node.js melalui
+antarmuka binding JavaScript. Kinerja baseline saat ini dan hasil setelah implementasi
+dibandingkan pada lingkungan perangkat keras yang identik dan tertutup, dalam satuan
+nanosecond dan nanosecond per operasi (ns/op) atas pemanggilan fungsi parser, disertai
+pencatatan beban prosesor harian sebelum implementasi agar dampak teknis yang teramati
+dapat dikaitkan langsung dengan perubahan parser, bukan dengan variasi lingkungan.
+Melalui perancangan tersebut, penelitian ini diharapkan memberikan dua kontribusi
+sekaligus: bukti empiris kelayakan parser on-demand pada aplikasi pelaporan nyata,
+dan metodologi evaluasi yang tertib dalam menghindari bias lingkungan.

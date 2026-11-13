@@ -1,0 +1,20 @@
+%% Desain perbandingan baseline dan perlakuan (Bab III.2).
+%% Kedua kelompok mengonsumsi korpus yang sama persis pada lingkungan tertutup identik.
+%%{init: {"flowchart": {"wrappingWidth": 420}}}%%
+flowchart TB
+    K["Korpus uji identik:<br/>fixture deterministik ber-hash SHA-256"]
+    K --> B1
+    K --> P1
+    subgraph B["Kelompok baseline"]
+        B1["Pembacaan berkas disertai<br/>JSON.parse bawaan runtime"] --> B2["Penggandaan nilai repository<br/>melalui pasangan<br/>serialisasi dan parsing"]
+    end
+    subgraph P["Kelompok perlakuan"]
+        P1["Pembacaan berkas disertai<br/>ze_json melalui binding Wasm"] --> P2["Akses nilai on-demand:<br/>find_path dan getter bertipe"]
+    end
+    L["Lingkungan tertutup:<br/>perangkat keras, runtime,<br/>dan konfigurasi identik"]
+    L -.-> B
+    L -.-> P
+    B --> M
+    P --> M
+    M["Metrik setara: latensi ns dan ns/op,<br/>throughput, konsumsi memori,<br/>event pengumpul sampah"] --> C["Perbandingan per fixture<br/>dan per mode pengukuran"]
+    C --> T["Pertukaran beban<br/>antara memori dan prosesor"]

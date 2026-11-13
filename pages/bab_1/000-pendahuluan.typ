@@ -19,6 +19,8 @@
 #include "004-manfaat.typ"
 == Ruang Lingkup Masalah
 #include "005-ruang_lingkup_masalah.typ"
-== Keberharuan
+== Kebaharuan
 #include "006-keberharuan.typ"
+== Hipotesis
+#include "007-hipotesis.typ"
 #pagebreak()
