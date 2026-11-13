@@ -116,6 +116,6 @@
 		text(size: 14pt, "DAFTAR PUSTAKA")
 	)
 )
-#bibliography("../../assets/bib/cites.bib", style: "apa", title: none)
+#bibliography("assets/bib/cites.bib", style: "apa", title: none)
 #pagebreak()
 #include "pages/004-riwayat_hidup.typ"

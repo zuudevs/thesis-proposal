@@ -26,8 +26,6 @@ sehingga biaya parsing proporsional terhadap bagian dokumen yang benar-benar dib
 Untuk mendukung akses acak yang cepat, parser on-demand dapat membangun indeks malas:
 pencarian field pada objek root mula-mula dilakukan secara sekuensial, dan indeks
 penuh baru dibangun setelah pola kueri berulang terdeteksi @10.14778_3115404.3115416.
-Akar gagasan pemrosesan malas ini telah teruji pada konteks dokumen berpohon lain,
-yaitu pemrosesan XML lazy @10.1145_585058.585075.
 
 === SWAR dan SIMD untuk Pemindaian Struktural
 

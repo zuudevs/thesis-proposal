@@ -1,0 +1,14 @@
+%% Bagan alir penelitian (Bab III.2).
+%% Titik keputusan memastikan validitas data sebelum analisis; kegagalan reproduksi
+%% kembali ke pengukuran setelah perbaikan instrumen.
+%%{init: {"flowchart": {"wrappingWidth": 420}}}%%
+flowchart TB
+    A["Masalah terformulasi<br/>dan terukur (Bab I)"] --> B["Desain eksperimen<br/>disiapkan (Bab III)"]
+    B --> C["Korpus uji dibangun<br/>dan di-hash SHA-256"]
+    C --> D["Pengukuran baseline<br/>(JSON.parse bawaan runtime)"]
+    D --> E["Integrasi ze_json<br/>dan pengukuran perlakuan"]
+    E --> F{"Hasil pengukuran<br/>dapat direproduksi?"}
+    F -- "Ya" --> G["Analisis data: P50 dan CI95,<br/>throughput, memori dan event GC,<br/>beban prosesor harian"]
+    F -- "Tidak" --> H["Perbaikan instrumen:<br/>kalibrasi batch, penyesuaian warm-up,<br/>penguatan metadata lingkungan"]
+    H --> D
+    G --> I["Kesimpulan kelayakan<br/>penerapan ze_json pada SAQ"]

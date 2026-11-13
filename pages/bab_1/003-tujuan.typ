@@ -1,4 +1,4 @@
-Sejalan dengan rumusan masalah, tujuan penelitian ini adalah:
+Sejalan dengan rumusan masalah tersebut, tujuan penelitian ini adalah:
 #block(inset: (left: 2em))[
 + Mengukur dan mendokumentasikan kinerja baseline jalur pemrosesan JSON aplikasi pelaporan SAQ, mencakup latensi pemanggilan fungsi parser dalam satuan nanosecond dan ns/op, throughput, serta konsumsi memori, disertai pencatatan beban prosesor harian sebelum implementasi.
 + Merancang dan mengimplementasikan integrasi Parser JSON On-Demand ze_json berbasis SWAR dan WebAssembly 64-bit ke lapisan repository aplikasi pelaporan SAQ melalui antarmuka binding JavaScript.

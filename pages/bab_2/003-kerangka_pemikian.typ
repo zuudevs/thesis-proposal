@@ -23,6 +23,6 @@ bermuara pada kesimpulan kelayakan penerapan ze_json pada aplikasi pelaporan oto
 SAQ.
 
 #figure(
-  image("../../../../assets/images/kerangka-pemikiran.png", width: 90%),
+  image("../../assets/images/kerangka-pemikiran.png", width: 90%),
   caption: [Kerangka pemikiran penelitian],
 ) <fig-kerangka-pemikiran>

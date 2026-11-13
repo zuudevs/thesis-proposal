@@ -8,7 +8,7 @@ Manfaat yang diharapkan dari penelitian ini terbagi menjadi dua sisi.
 	+ Memetakan secara eksplisit pertukaran beban antara konsumsi memori dan beban prosesor sebagai konsekuensi arsitektural strategi parsing on-demand.
 ]
 
-=== Manfaat praktis
+=== Manfaat Praktis
 
 #block(inset: (left: 2em))[
 	+ Bagi aplikasi pelaporan SAQ, hasil penelitian memberikan dasar pengambilan keputusan apakah lapisan pembacaan JSON sebaiknya bermigrasi ke parser on-demand untuk menekan konsumsi memori dan memperbaiki stabilitas waktu respons.

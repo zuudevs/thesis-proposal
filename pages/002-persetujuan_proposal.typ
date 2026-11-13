@@ -1,5 +1,5 @@
 #let metadata = json("../metadata.json")
-#import "../../utils/strfmt.typ": strfmt
+#import "../utils/strfmt.typ": strfmt
 
 #let studentInfoMatrix = (
 	"Nama Mahasiswa": metadata.student.full_name,
@@ -12,7 +12,7 @@
 
 #align(center)[
 	#image(
-		"../../../assets/images/itpln_logo.png",
+		"../assets/images/itpln_logo.png",
 		height: 4.5cm,
 		width: 6.5cm,
 		fit: "contain",

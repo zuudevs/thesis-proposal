@@ -1,0 +1,23 @@
+%% Kerangka pemikiran penelitian (Bab II.3).
+%% Alur: masalah - solusi literatur - celah - hipotesis - metode - keluaran.
+%%{init: {"flowchart": {"wrappingWidth": 420}}}%%
+flowchart TB
+    M["Masalah: aplikasi pelaporan SAQ<br/>memproses JSON dengan pola akses parsial,<br/>sementara JSON.parse membentuk DOM utuh,<br/>sehingga biaya waktu prosesor dan memori<br/>tidak proporsional terhadap kebutuhan"]
+    S["Solusi dari literatur"]
+    S1["Parsing on-demand:<br/>materialisasi malas,<br/>tanpa pohon parse"]
+    S2["Pemindaian struktural SWAR:<br/>posisi struktur direkam<br/>dalam satu lintasan"]
+    S3["WebAssembly:<br/>jembatan eksekusi kode C++<br/>di runtime Node.js"]
+    G["Celah penelitian: keunggulan diukur<br/>pada korpus benchmark generik,<br/>bukti penerapan pada aplikasi<br/>operasional belum tersedia"]
+    H["Hipotesis: ze_json menurunkan latensi<br/>dan konsumsi memori dengan<br/>beban prosesor yang terkendali"]
+    E["Metode: eksperimen terkendali baseline<br/>versus perlakuan pada lingkungan tertutup<br/>dengan perangkat keras identik"]
+    O["Keluaran: keputusan kelayakan penerapan<br/>ze_json dan pemetaan pertukaran beban<br/>antara memori dan prosesor"]
+    M --> S
+    S --> S1
+    S --> S2
+    S --> S3
+    S1 --> G
+    S2 --> G
+    S3 --> G
+    G --> H
+    H --> E
+    E --> O
